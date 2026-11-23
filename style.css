@@ -15,6 +15,22 @@ html, body {
   background: #000;
 }
 
+/* Test image layer (?image=1): behind the text, slow drift */
+#bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: drift 90s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  from { transform: scale(1.06) translateX(-12px); }
+  to { transform: scale(1.06) translateX(12px); }
+}
+
 /* Text safe area: central 770 CSS px (proposal section 4) */
 #main {
   position: absolute;

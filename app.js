@@ -24,6 +24,10 @@ const STATE_COLORS = {
 };
 const DEFAULT_STATE = "clouds"; // shown only until the first fetch succeeds
 
+// Test images (?image=1): 0 to 1, lower keeps the text easier to read
+const IMAGE_OPACITY = 0.7;
+const IMAGE_DIR = "assets/test/";
+
 // Location and timing: Long Island City, Queens
 const LAT = 40.74;
 const LON = -73.95;
@@ -33,6 +37,7 @@ const STALE_MS = 60 * 60 * 1000;
 const FETCH_TIMEOUT_MS = 15 * 1000;
 
 const dotEl = document.getElementById("dot");
+const bgEl = document.getElementById("bg");
 
 // Optional ?flip= override for quick tests in Safari (not kept in the Home Screen app)
 const params = new URLSearchParams(location.search);
@@ -63,6 +68,15 @@ function render() {
   stateBarEl.style.background = color;
   stateNameEl.textContent = name;
   stateNameEl.style.color = color;
+
+  if (params.get("image") === "1") {
+    const src = IMAGE_DIR + name + ".png";
+    if (!bgEl.getAttribute("src") || !bgEl.getAttribute("src").endsWith(src)) {
+      bgEl.setAttribute("src", src);
+    }
+    bgEl.style.opacity = IMAGE_OPACITY;
+    bgEl.hidden = false;
+  }
 
   if (lastData) {
     tempEl.textContent = Math.round(lastData.temperature_2m) + "°";

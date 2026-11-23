@@ -3,6 +3,15 @@
 Home Screen web app (plain HTML/CSS/JS, no build step) for an iPhone lying under a
 45 degree pane. Design: `maker-research/notes/peppers-ghost-proposal.md` (r3).
 
+## Image test
+
+Add `?image=1` to show one image per state behind the text (placeholders in
+`assets/test/`, drawn by `node tools/make-test-images.js`). Try
+`?image=1&state=sun` (then `clouds`, `rain`, `snow`, `night`) under the pane. The
+images are slightly oversized and drift slowly. Opacity is `IMAGE_OPACITY` in
+`app.js`. To use your own art, replace the five PNGs (same names, transparent
+background, about 852 x 393).
+
 ## Phase 2: live data
 
 Current weather for Long Island City from Open-Meteo, refreshed every 15 minutes
