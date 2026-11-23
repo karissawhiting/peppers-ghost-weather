@@ -3,12 +3,27 @@
 Home Screen web app (plain HTML/CSS/JS, no build step) for an iPhone lying under a
 45 degree pane. Design: `maker-research/notes/peppers-ghost-proposal.md` (r3).
 
-## Phase 1: static mock
+## Phase 2: live data
 
-Hard-coded wide layout (temperature, condition word, a coloured state label, an
-"updated" line with a dot, and the Open-Meteo credit). No live data or animation yet.
+Current weather for Long Island City from Open-Meteo, refreshed every 15 minutes
+(`LAT`, `LON`, `REFRESH_MS`, `STALE_MS` at the top of `app.js`). Pure helpers are in
+`weather.js`; run the tests with `node tests/weather.test.js`.
 
-- `?state=sun|clouds|rain|snow|night` switches the five states (default `sun`).
+- State from the weather code: clear is `sun` by day and `night` after dark; clouds,
+  fog, rain, snow as in the proposal. Cloudy, rain and snow at night keep their own
+  state (night overlay comes in Phase 3).
+- If a fetch fails, the last values stay and it retries after 1, 2, then every 5
+  minutes. The dot is green when fresh, red after 60 minutes without an update, grey
+  before the first load.
+- `?state=...` still forces the state look and label; live temperature and word show.
+- Device check: compare temperature and word with a weather app for about 24 hours.
+  The "updated" time should move about every 15 minutes, and no state should stay
+  stuck. For a stale test, use Airplane Mode for a few minutes, then turn it off: the
+  values stay, then recover.
+
+## Phase 1: static mock (now live data, see above)
+
+- `?state=sun|clouds|rain|snow|night` switches the five states.
 - Example: `https://karissawhiting.github.io/peppers-ghost-weather/?state=rain`
 - Device check: put the phone under the pane, open each state, and read the text from
   3 to 4 ft. Nothing should be cut off; the state colours should look distinct.

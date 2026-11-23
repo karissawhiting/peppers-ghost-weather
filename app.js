@@ -14,16 +14,25 @@ const stateBarEl = document.getElementById("state-bar");
 const stateNameEl = document.getElementById("state-name");
 const updatedTextEl = document.getElementById("updated-text");
 
-// Phase 1: hard-coded values per state, no live data yet
-const STATES = {
-  sun: { temp: 72, condition: "Sunny", color: "#ffb000" },
-  clouds: { temp: 61, condition: "Cloudy", color: "#9a9a9a" },
-  rain: { temp: 54, condition: "Light rain", color: "#2f8cff" },
-  snow: { temp: 28, condition: "Snow", color: "#ffffff" },
-  night: { temp: 47, condition: "Clear", color: "#6a5cff" },
+// Label colour per state (look only; values come from the live data)
+const STATE_COLORS = {
+  sun: "#ffb000",
+  clouds: "#9a9a9a",
+  rain: "#2f8cff",
+  snow: "#ffffff",
+  night: "#6a5cff",
 };
-const DEFAULT_STATE = "sun";
-const UPDATED_TEXT = "updated 3:42 PM";
+const DEFAULT_STATE = "clouds"; // shown only until the first fetch succeeds
+
+// Location and timing: Long Island City, Queens
+const LAT = 40.74;
+const LON = -73.95;
+const TIMEZONE = "America/New_York";
+const REFRESH_MS = 15 * 60 * 1000;
+const STALE_MS = 60 * 60 * 1000;
+const FETCH_TIMEOUT_MS = 15 * 1000;
+
+const dotEl = document.getElementById("dot");
 
 // Optional ?flip= override for quick tests in Safari (not kept in the Home Screen app)
 const params = new URLSearchParams(location.search);
@@ -31,18 +40,84 @@ const flipSetting = params.get("flip") || FLIP;
 const flipNames = { none: "none", h: "horizontal", v: "vertical", both: "both" };
 const flip = flipNames[flipSetting] || flipSetting;
 
-// ?state=sun|clouds|rain|snow|night, falls back to the default
+// ?state=sun|clouds|rain|snow|night forces the state look (testing); live text still shows
 const stateKey = params.get("state");
-const stateName = STATES[stateKey] ? stateKey : DEFAULT_STATE;
+const stateOverride = STATE_COLORS[stateKey] ? stateKey : null;
 
-function showState() {
-  const state = STATES[stateName];
-  tempEl.textContent = state.temp + "°";
-  conditionEl.textContent = state.condition;
-  stateBarEl.style.background = state.color;
-  stateNameEl.textContent = stateName;
-  stateNameEl.style.color = state.color;
-  updatedTextEl.textContent = UPDATED_TEXT;
+// ---- Live data ----
+let lastOkMs = null; // phone clock time of the last good fetch
+let lastData = null; // last good "current" block
+let failureCount = 0;
+let refreshTimer = null;
+let fetching = false;
+
+function currentStateName() {
+  if (stateOverride) return stateOverride;
+  if (!lastData) return DEFAULT_STATE;
+  return Weather.stateFromWeather(lastData.weather_code, lastData.is_day);
+}
+
+function render() {
+  const name = currentStateName();
+  const color = STATE_COLORS[name];
+  stateBarEl.style.background = color;
+  stateNameEl.textContent = name;
+  stateNameEl.style.color = color;
+
+  if (lastData) {
+    tempEl.textContent = Math.round(lastData.temperature_2m) + "°";
+    conditionEl.textContent = Weather.conditionWord(lastData.weather_code, lastData.is_day);
+    updatedTextEl.textContent = "updated " + Weather.formatUpdated(lastData.time);
+  } else {
+    tempEl.textContent = "--°";
+    conditionEl.textContent = "Loading";
+    updatedTextEl.textContent = "waiting for data";
+  }
+
+  // Dot: grey = no data yet, green = fresh, red = stale
+  if (!lastData) {
+    dotEl.style.background = "#666";
+  } else if (Weather.isStale(lastOkMs, Date.now(), STALE_MS)) {
+    dotEl.style.background = "#e33";
+  } else {
+    dotEl.style.background = "#3c3";
+  }
+  versionEl.textContent = describeVersion();
+}
+
+function scheduleRefresh(delayMs) {
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(fetchWeather, delayMs);
+}
+
+async function fetchWeather() {
+  if (fetching) return;
+  fetching = true;
+  const controller = new AbortController();
+  const timeout = setTimeout(function() {
+    controller.abort();
+  }, FETCH_TIMEOUT_MS);
+  try {
+    const response = await fetch(Weather.buildUrl(LAT, LON, TIMEZONE), {
+      signal: controller.signal,
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    const current = Weather.parseCurrent(await response.json());
+    if (!current) throw new Error("unexpected response");
+    lastData = current;
+    lastOkMs = Date.now();
+    failureCount = 0;
+    scheduleRefresh(REFRESH_MS);
+  } catch (err) {
+    // Keep the last values and try again soon
+    failureCount += 1;
+    scheduleRefresh(Weather.retryDelayMs(failureCount));
+  } finally {
+    clearTimeout(timeout);
+    fetching = false;
+    render();
+  }
 }
 
 function layout() {
@@ -93,6 +168,11 @@ async function requestWakeLock() {
 document.addEventListener("visibilitychange", function() {
   if (document.visibilityState === "visible") {
     requestWakeLock();
+    // Refresh if data is older than one interval (timers can pause while hidden)
+    if (lastOkMs === null || Date.now() - lastOkMs > REFRESH_MS) {
+      fetchWeather();
+    }
+    render();
   }
 });
 
@@ -104,11 +184,13 @@ function describeVersion() {
     ? "iOS " + ios[1] + "." + ios[2] + (ios[3] ? "." + ios[3] : "")
     : "iOS ?";
   const standalone = navigator.standalone === true ? "app" : "browser";
-  return iosText + " | " + standalone + " | flip " + flip + " | " + stateName;
+  return iosText + " | " + standalone + " | flip " + flip + " | " + currentStateName();
 }
 
-versionEl.textContent = describeVersion();
-showState();
+render();
 layout();
 window.addEventListener("resize", layout);
 requestWakeLock();
+fetchWeather();
+// Re-check the stale dot every 30 s
+setInterval(render, 30 * 1000);
