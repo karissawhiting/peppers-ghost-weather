@@ -8,14 +8,42 @@ const ROTATE = 90;
 const stage = document.getElementById("stage");
 const statusEl = document.getElementById("status");
 const versionEl = document.getElementById("version");
-const letterEl = document.getElementById("letter");
-const arrowEl = document.getElementById("arrow");
+const tempEl = document.getElementById("temp");
+const conditionEl = document.getElementById("condition");
+const stateBarEl = document.getElementById("state-bar");
+const stateNameEl = document.getElementById("state-name");
+const updatedTextEl = document.getElementById("updated-text");
+
+// Phase 1: hard-coded values per state, no live data yet
+const STATES = {
+  sun: { temp: 72, condition: "Sunny", color: "#ffb000" },
+  clouds: { temp: 61, condition: "Cloudy", color: "#9a9a9a" },
+  rain: { temp: 54, condition: "Light rain", color: "#2f8cff" },
+  snow: { temp: 28, condition: "Snow", color: "#ffffff" },
+  night: { temp: 47, condition: "Clear", color: "#6a5cff" },
+};
+const DEFAULT_STATE = "sun";
+const UPDATED_TEXT = "updated 3:42 PM";
 
 // Optional ?flip= override for quick tests in Safari (not kept in the Home Screen app)
 const params = new URLSearchParams(location.search);
 const flipSetting = params.get("flip") || FLIP;
 const flipNames = { none: "none", h: "horizontal", v: "vertical", both: "both" };
 const flip = flipNames[flipSetting] || flipSetting;
+
+// ?state=sun|clouds|rain|snow|night, falls back to the default
+const stateKey = params.get("state");
+const stateName = STATES[stateKey] ? stateKey : DEFAULT_STATE;
+
+function showState() {
+  const state = STATES[stateName];
+  tempEl.textContent = state.temp + "°";
+  conditionEl.textContent = state.condition;
+  stateBarEl.style.background = state.color;
+  stateNameEl.textContent = stateName;
+  stateNameEl.style.color = state.color;
+  updatedTextEl.textContent = UPDATED_TEXT;
+}
 
 function layout() {
   const w = window.innerWidth;
@@ -34,9 +62,9 @@ function layout() {
   stage.style.transform =
     "scale(" + scaleX + "," + scaleY + ") rotate(" + ROTATE + "deg)";
 
-  const size = Math.round(stageH * 0.6);
-  letterEl.style.fontSize = size + "px";
-  arrowEl.style.fontSize = size + "px";
+  // Temperature shrinks if the stage is shorter than expected (floor ~140 px letters)
+  const tempSize = Math.max(195, Math.min(220, Math.round(stageH * 0.56)));
+  tempEl.style.fontSize = tempSize + "px";
 }
 
 // ---- Wake Lock ----
@@ -76,10 +104,11 @@ function describeVersion() {
     ? "iOS " + ios[1] + "." + ios[2] + (ios[3] ? "." + ios[3] : "")
     : "iOS ?";
   const standalone = navigator.standalone === true ? "app" : "browser";
-  return iosText + " | " + standalone + " | flip " + flip;
+  return iosText + " | " + standalone + " | flip " + flip + " | " + stateName;
 }
 
 versionEl.textContent = describeVersion();
+showState();
 layout();
 window.addEventListener("resize", layout);
 requestWakeLock();

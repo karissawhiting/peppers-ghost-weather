@@ -15,26 +15,65 @@ html, body {
   background: #000;
 }
 
-#card {
+/* Text safe area: central 770 CSS px (proposal section 4) */
+#main {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 770px;
+  margin-left: -385px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8vmin;
+  text-align: center;
 }
 
-#letter, #arrow {
+/* Letter heights: temperature ~160 px, condition ~45 px (font-size = height / 0.72) */
+#temp {
+  font-size: 220px;
   font-weight: 700;
-  line-height: 1;
+  line-height: 0.95;
 }
 
-#status, #version {
+#condition {
+  font-size: 62px;
+  line-height: 1.1;
+}
+
+#state-label {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+#state-bar {
+  display: inline-block;
+  width: 60px;
+  height: 8px;
+  border-radius: 4px;
+}
+
+/* Corner text, ~18 px */
+#updated, #credit, #status, #version {
   position: absolute;
-  bottom: 6px;
-  font-size: 14px;
+  font-size: 18px;
   color: #aaa;
 }
 
-#status { left: 20px; }
-#version { right: 20px; }
+#updated { top: 8px; left: 20px; display: flex; align-items: center; gap: 8px; }
+#credit { top: 8px; right: 20px; }
+#status { bottom: 8px; left: 20px; }
+#version { bottom: 8px; right: 20px; }
+
+#dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #3c3;
+}

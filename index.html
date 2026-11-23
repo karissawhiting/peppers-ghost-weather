@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Ghost weather: test card</title>
+  <title>Ghost weather</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#000000">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,10 +15,13 @@
 <body>
   <!-- stage is rotated and flipped by app.js -->
   <div id="stage">
-    <div id="card">
-      <div id="letter">R</div>
-      <div id="arrow">&#8593;</div>
+    <div id="main">
+      <div id="temp"></div>
+      <div id="condition"></div>
+      <div id="state-label"><span id="state-bar"></span><span id="state-name"></span></div>
     </div>
+    <div id="updated"><span id="dot"></span><span id="updated-text"></span></div>
+    <div id="credit">Weather data by Open-Meteo.com</div>
     <div id="status">wake lock: checking</div>
     <div id="version"></div>
   </div>

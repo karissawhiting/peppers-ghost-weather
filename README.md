@@ -3,10 +3,19 @@
 Home Screen web app (plain HTML/CSS/JS, no build step) for an iPhone lying under a
 45 degree pane. Design: `maker-research/notes/peppers-ghost-proposal.md` (r3).
 
-## Phase 0: test card
+## Phase 1: static mock
 
-A white "R" and an up arrow on #000, to check how the reflection reads and whether
-Wake Lock keeps the screen on.
+Hard-coded wide layout (temperature, condition word, a coloured state label, an
+"updated" line with a dot, and the Open-Meteo credit). No live data or animation yet.
+
+- `?state=sun|clouds|rain|snow|night` switches the five states (default `sun`).
+- Example: `https://karissawhiting.github.io/peppers-ghost-weather/?state=rain`
+- Device check: put the phone under the pane, open each state, and read the text from
+  3 to 4 ft. Nothing should be cut off; the state colours should look distinct.
+- Keep the screen on with iOS Auto-Lock set to Never (Wake Lock is unsupported on the
+  test phone; the code still tries it and shows its status in the bottom left).
+
+## Phase 0: test card (replaced by Phase 1; settings below still apply)
 
 Settings are at the top of `app.js`:
 
