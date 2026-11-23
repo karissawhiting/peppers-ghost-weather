@@ -3,6 +3,15 @@
 Home Screen web app (plain HTML/CSS/JS, no build step) for an iPhone lying under a
 45 degree pane. Design: `maker-research/notes/peppers-ghost-proposal.md` (r3).
 
+## Video test
+
+`?video=1` plays a looping clip behind the text when the state has one
+(`VIDEOS` in `app.js`: `clouds` has two, `night` has one); other states show the
+still image. `?clip=2` picks the second clip. Clips are muted, looped, `playsinline`,
+and blended with `mix-blend-mode: screen`, so pure black drops out. If autoplay is
+blocked (for example Low Power Mode) the still image is shown instead.
+Example: `?video=1&state=clouds&flip=h`
+
 ## Image test
 
 Add `?image=1` to show one image per state behind the text (placeholders in

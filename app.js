@@ -28,6 +28,13 @@ const DEFAULT_STATE = "clouds"; // shown only until the first fetch succeeds
 const IMAGE_OPACITY = 0.7;
 const IMAGE_DIR = "assets/test/";
 
+// Test clips (?video=1), on black so they blend away in the reflection
+const VIDEO_OPACITY = 0.85;
+const VIDEOS = {
+  clouds: ["assets/clouds.mp4", "assets/clouds2.mp4"],
+  night: ["assets/night.mp4"],
+};
+
 // Location and timing: Long Island City, Queens
 const LAT = 40.74;
 const LON = -73.95;
@@ -38,6 +45,7 @@ const FETCH_TIMEOUT_MS = 15 * 1000;
 
 const dotEl = document.getElementById("dot");
 const bgEl = document.getElementById("bg");
+const videoEl = document.getElementById("bgvideo");
 
 // Optional ?flip= override for quick tests in Safari (not kept in the Home Screen app)
 const params = new URLSearchParams(location.search);
@@ -62,6 +70,48 @@ function currentStateName() {
   return Weather.stateFromWeather(lastData.weather_code, lastData.is_day);
 }
 
+// Background: ?video=1 plays the state's clip (falls back to the still image),
+// ?image=1 shows the still image only. ?clip=2 picks the second clip if there is one.
+function setSrc(el, src) {
+  const current = el.getAttribute("src");
+  if (!current || !current.endsWith(src)) {
+    el.setAttribute("src", src);
+  }
+}
+
+function showStill(name) {
+  videoEl.hidden = true;
+  setSrc(bgEl, IMAGE_DIR + name + ".png");
+  bgEl.style.opacity = IMAGE_OPACITY;
+  bgEl.hidden = false;
+}
+
+function showBackground(name) {
+  const wantVideo = params.get("video") === "1";
+  const wantImage = params.get("image") === "1";
+  if (!wantVideo && !wantImage) return;
+
+  const clips = VIDEOS[name] || [];
+  const clipIndex = params.get("clip") === "2" ? 1 : 0;
+  const clip = clips[clipIndex] || clips[0];
+
+  if (!wantVideo || !clip) {
+    showStill(name);
+    return;
+  }
+  bgEl.hidden = true;
+  setSrc(videoEl, clip);
+  videoEl.style.opacity = VIDEO_OPACITY;
+  videoEl.hidden = false;
+  // Autoplay can be blocked (for example Low Power Mode): fall back to the still
+  const started = videoEl.play();
+  if (started && started.catch) {
+    started.catch(function() {
+      showStill(name);
+    });
+  }
+}
+
 function render() {
   const name = currentStateName();
   const color = STATE_COLORS[name];
@@ -69,14 +119,7 @@ function render() {
   stateNameEl.textContent = name;
   stateNameEl.style.color = color;
 
-  if (params.get("image") === "1") {
-    const src = IMAGE_DIR + name + ".png";
-    if (!bgEl.getAttribute("src") || !bgEl.getAttribute("src").endsWith(src)) {
-      bgEl.setAttribute("src", src);
-    }
-    bgEl.style.opacity = IMAGE_OPACITY;
-    bgEl.hidden = false;
-  }
+  showBackground(name);
 
   if (lastData) {
     tempEl.textContent = Math.round(lastData.temperature_2m) + "°";
